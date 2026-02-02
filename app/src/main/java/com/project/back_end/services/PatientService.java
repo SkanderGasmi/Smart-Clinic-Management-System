@@ -44,7 +44,7 @@ public class PatientService {
     @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getPatientAppointment(Long id, String token) {
         Map<String, Object> response = new HashMap<>();
-        String email = tokenService.extractEmail(token);
+        String email = tokenService.extractIdentifier(token);
         Patient patient = patientRepository.findByEmail(email);
         if (patient == null || !patient.getId().equals(id)) {
             response.put("error", "Unauthorized access");
@@ -84,7 +84,7 @@ public class PatientService {
     public ResponseEntity<Map<String, Object>> filterByDoctor(String name, Long patientId) {
         Map<String, Object> response = new HashMap<>();
         List<AppointmentDTO> filtered = appointmentRepository
-                .findByPatientIdAndDoctorNameLike(patientId, "%" + name + "%")
+                .filterByDoctorNameAndPatientId(name, patientId)
                 .stream()
                 .map(AppointmentDTO::new)
                 .collect(Collectors.toList());
@@ -97,8 +97,8 @@ public class PatientService {
     public ResponseEntity<Map<String, Object>> filterByDoctorAndCondition(String condition, String name,
             long patientId) {
         Map<String, Object> response = new HashMap<>();
-        List<Appointment> appointments = appointmentRepository.findByPatientIdAndDoctorNameLike(patientId,
-                "%" + name + "%");
+        List<Appointment> appointments = appointmentRepository
+                .filterByDoctorNameAndPatientId(name, patientId);
 
         List<AppointmentDTO> filtered = appointments.stream()
                 .filter(a -> {
@@ -119,7 +119,7 @@ public class PatientService {
     @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getPatientDetails(String token) {
         Map<String, Object> response = new HashMap<>();
-        String email = tokenService.extractEmail(token);
+        String email = tokenService.extractIdentifier(token);
         Patient patient = patientRepository.findByEmail(email);
         if (patient == null) {
             response.put("error", "Patient not found");

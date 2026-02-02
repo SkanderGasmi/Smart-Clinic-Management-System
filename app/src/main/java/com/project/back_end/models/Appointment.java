@@ -102,4 +102,12 @@ public class Appointment {
   public LocalTime getAppointmentTimeOnly() {
     return appointmentTime.toLocalTime();
   }
+
+  public Long getDoctorId() {
+    return doctor.getId();
+  }
+
+  public Long getPatientId() {
+    return patient.getId();
+  }
 }

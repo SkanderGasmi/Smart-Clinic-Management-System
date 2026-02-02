@@ -1,5 +1,6 @@
 package com.project.back_end.services;
 
+import com.project.back_end.DTO.Login;
 import com.project.back_end.models.*;
 import com.project.back_end.repo.*;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.List;
 
 @Service
-public class Service {
+public class Service_ {
 
     private final TokenService tokenService;
     private final AdminRepository adminRepository;
@@ -20,7 +21,7 @@ public class Service {
     private final DoctorService doctorService;
     private final PatientService patientService;
 
-    public Service(TokenService tokenService,
+    public Service_(TokenService tokenService,
             AdminRepository adminRepository,
             DoctorRepository doctorRepository,
             PatientRepository patientRepository,
@@ -34,7 +35,6 @@ public class Service {
         this.patientService = patientService;
     }
 
-    // 1. Validate JWT Token
     public ResponseEntity<Map<String, String>> validateToken(String token, String user) {
         Map<String, String> response = new HashMap<>();
         if (!tokenService.validateToken(token, user)) {
@@ -45,7 +45,6 @@ public class Service {
         return ResponseEntity.ok(response);
     }
 
-    // 2. Validate Admin login
     public ResponseEntity<Map<String, String>> validateAdmin(Admin receivedAdmin) {
         Map<String, String> response = new HashMap<>();
         try {
@@ -68,30 +67,27 @@ public class Service {
         }
     }
 
-    // 3. Filter doctors
     public Map<String, Object> filterDoctor(String name, String specialty, String time) {
         return doctorService.filterDoctorsByNameSpecilityandTime(name, specialty, time);
     }
 
-    // 4. Validate Appointment
     public int validateAppointment(Appointment appointment) {
         if (!doctorRepository.existsById(appointment.getDoctorId()))
             return -1;
-        List<String> availableSlots = doctorService.getDoctorAvailability(appointment.getDoctorId(),
+        List<String> availableSlots = doctorService.getDoctorAvailability(
+                appointment.getDoctorId(),
                 appointment.getAppointmentTime().toLocalDate());
         return availableSlots.contains(appointment.getAppointmentTime().toLocalTime().toString()) ? 1 : 0;
     }
 
-    // 5. Validate Patient existence
     public boolean validatePatient(Patient patient) {
         return patientRepository.findByEmailOrPhone(patient.getEmail(), patient.getPhone()) == null;
     }
 
-    // 6. Validate Patient login
     public ResponseEntity<Map<String, String>> validatePatientLogin(Login login) {
         Map<String, String> response = new HashMap<>();
         try {
-            Patient patient = patientRepository.findByEmail(login.getEmail());
+            Patient patient = patientRepository.findByEmail(login.getIdentifier());
             if (patient == null) {
                 response.put("message", "Patient not found");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -110,11 +106,10 @@ public class Service {
         }
     }
 
-    // 7. Filter patient appointments
     public ResponseEntity<Map<String, Object>> filterPatient(String condition, String name, String token) {
         Map<String, Object> response = new HashMap<>();
         try {
-            String email = tokenService.getEmailFromToken(token);
+            String email = tokenService.extractIdentifier(token);
             Patient patient = patientRepository.findByEmail(email);
             if (patient == null) {
                 response.put("message", "Patient not found");
@@ -130,4 +125,10 @@ public class Service {
             } else {
                 return patientService.getPatientAppointment(patient.getId(), token);
             }
-        } catch (Exception e)
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("message", "Internal server error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+}

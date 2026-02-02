@@ -102,7 +102,7 @@ public class DoctorService {
             response.put("error", "Invalid password");
             return ResponseEntity.badRequest().body(response);
         }
-        String token = tokenService.generateTokenForDoctor(doctor); // assume method exists
+        String token = tokenService.generateToken(doctor); // assume method exists
         response.put("token", token);
         return ResponseEntity.ok(response);
     }

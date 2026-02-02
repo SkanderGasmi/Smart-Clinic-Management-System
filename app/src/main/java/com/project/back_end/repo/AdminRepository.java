@@ -9,4 +9,7 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
 
     // Find an admin by username
     Admin findByUsername(String username);
+
+    boolean existsByUsername(String identifier);
+
 }
