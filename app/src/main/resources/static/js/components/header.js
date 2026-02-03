@@ -1,101 +1,123 @@
-// header.js
-// This script dynamically renders the header based on the user's role and session state
+// /js/header.js
+import { renderPatientSignup } from './modals/patientSignupModal.js';
+import { renderPatientLogin } from './modals/patientLoginModal.js';
+import { renderAdminLogin } from './modals/adminLoginModal.js';
+import { renderDoctorLogin } from './modals/doctorLoginModal.js';
+import { selectRole } from '../services/index.js'; // import selectRole
 
-function renderHeader() {
+export function renderHeader() {
   const headerDiv = document.getElementById("header");
+  if (!headerDiv) return console.error("Header div not found!");
 
-  // If on homepage/root, clear session and render simple logo header
-  if (window.location.pathname.endsWith("/")) {
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("token");
-
-    headerDiv.innerHTML = `
-            <header class="header">
-                <div class="logo-section">
-                    <img src="../assets/images/logo/logo.png" alt="Hospital CRM Logo" class="logo-img">
-                    <span class="logo-title">Hospital CMS</span>
-                </div>
-            </header>`;
-    return;
-  }
-
-  // Retrieve user role and token
   const role = localStorage.getItem("userRole");
   const token = localStorage.getItem("token");
 
-  let headerContent = `
-        <header class="header">
-            <div class="logo-section">
-                <img src="../assets/images/logo/logo.png" alt="Hospital CRM Logo" class="logo-img">
-                <span class="logo-title">Hospital CMS</span>
-            </div>
-            <nav>`;
+  if (window.location.pathname.endsWith("/")) {
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("token");
+    headerDiv.innerHTML = `
+      <header class="header">
+        <div class="logo-section">
+          <img src="../assets/images/logo/logo.png" alt="Hospital CMS Logo" class="logo-img">
+          <span class="logo-title">Hospital CMS</span>
+        </div>
+      </header>`;
+    return;
+  }
 
-  // Session expired or invalid login check
   if ((role === "loggedPatient" || role === "admin" || role === "doctor") && !token) {
     localStorage.removeItem("userRole");
-    alert("Session expired or invalid login. Please log in again.");
+    alert("Session expired. Please log in again.");
     window.location.href = "/";
     return;
   }
 
-  // Add role-specific header buttons/links
-  if (role === "admin") {
-    headerContent += `
-            <button id="addDocBtn" class="adminBtn" onclick="openModal('addDoctor')">Add Doctor</button>
-            <a href="#" onclick="logout()">Logout</a>`;
-  } else if (role === "doctor") {
-    headerContent += `
-            <button class="adminBtn" onclick="selectRole('doctor')">Home</button>
-            <a href="#" onclick="logout()">Logout</a>`;
-  } else if (role === "patient") {
-    headerContent += `
-            <button id="patientLogin" class="adminBtn">Login</button>
-            <button id="patientSignup" class="adminBtn">Sign Up</button>`;
-  } else if (role === "loggedPatient") {
-    headerContent += `
-            <button id="home" class="adminBtn" onclick="window.location.href='/pages/loggedPatientDashboard.html'">Home</button>
-            <button id="patientAppointments" class="adminBtn" onclick="window.location.href='/pages/patientAppointments.html'">Appointments</button>
-            <a href="#" onclick="logoutPatient()">Logout</a>`;
+  let headerContent = `
+    <header class="header">
+      <div class="logo-section">
+        <img src="../assets/images/logo/logo.png" alt="Hospital CMS Logo" class="logo-img">
+        <span class="logo-title">Hospital CMS</span>
+      </div>
+      <nav>`;
+
+  switch (role) {
+    case "admin":
+      headerContent += `
+        <button id="addDocBtn" class="adminBtn">Add Doctor</button>
+        <button id="adminLogin" class="adminBtn">Login</button>
+        <button id="logoutBtn" class="adminBtn">Logout</button>`;
+      break;
+    case "doctor":
+      headerContent += `
+        <button class="adminBtn" onclick="selectRole('doctor')">Home</button>
+        <button id="logoutBtn" class="adminBtn">Logout</button>`;
+      break;
+    case "patient":
+      headerContent += `
+        <button id="patientLogin" class="adminBtn">Login</button>
+        <button id="patientSignup" class="adminBtn">Sign Up</button>`;
+      break;
+    case "loggedPatient":
+      headerContent += `
+        <button class="adminBtn" onclick="selectRole('loggedPatient')">Home</button>
+        <button class="adminBtn" onclick="window.location.href='/pages/patientAppointments.html'">Appointments</button>
+        <button id="logoutPatientBtn" class="adminBtn">Logout</button>`;
+      break;
   }
 
-  // Close nav and header
-  headerContent += `
-            </nav>
-        </header>`;
-
-  // Inject the generated header into the DOM
+  headerContent += `</nav></header>`;
   headerDiv.innerHTML = headerContent;
 
-  // Attach dynamic event listeners
-  attachHeaderButtonListeners();
+  attachListeners();
 }
 
-// Attach event listeners to dynamically created header buttons
-function attachHeaderButtonListeners() {
-  const loginBtn = document.getElementById("patientLogin");
-  if (loginBtn) loginBtn.addEventListener("click", () => openModal('patientLogin'));
+function attachListeners() {
+  const modal = document.getElementById("modal");
+  const modalBody = document.getElementById("modal-body");
+  const closeBtn = document.getElementById("closeModal");
+
+  if (closeBtn && modal) closeBtn.onclick = () => (modal.style.display = "none");
 
   const signupBtn = document.getElementById("patientSignup");
-  if (signupBtn) signupBtn.addEventListener("click", () => openModal('patientSignup'));
+  if (signupBtn && modal && modalBody) {
+    signupBtn.addEventListener("click", () => {
+      modal.style.display = "block";
+      renderPatientSignup(modalBody);
+    });
+  }
+
+  const loginBtn = document.getElementById("patientLogin");
+  if (loginBtn && modal && modalBody) {
+    loginBtn.addEventListener("click", () => {
+      modal.style.display = "block";
+      renderPatientLogin(modalBody);
+    });
+  }
+
+  const adminLoginBtn = document.getElementById("adminLogin");
+  if (adminLoginBtn && modal && modalBody) {
+    adminLoginBtn.addEventListener("click", () => {
+      modal.style.display = "block";
+      renderAdminLogin(modalBody);
+    });
+  }
 
   const addDocBtn = document.getElementById("addDocBtn");
-  if (addDocBtn) addDocBtn.addEventListener("click", () => openModal('addDoctor'));
+  if (addDocBtn) addDocBtn.addEventListener("click", () => alert("Add Doctor modal not implemented"));
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    window.location.href = "/";
+  });
+
+  const logoutPatientBtn = document.getElementById("logoutPatientBtn");
+  if (logoutPatientBtn) logoutPatientBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.setItem("userRole", "patient");
+    window.location.href = "/pages/patientDashboard.html";
+  });
 }
 
-// Logout function for admin, doctor, or loggedPatient
-function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("userRole");
-  window.location.href = "/";
-}
-
-// Logout function specifically for loggedPatient
-function logoutPatient() {
-  localStorage.removeItem("token");
-  localStorage.setItem("userRole", "patient"); // Retain patient role to show login/signup again
-  window.location.href = "/pages/patientDashboard.html";
-}
-
-// Call renderHeader on page load
 document.addEventListener("DOMContentLoaded", renderHeader);

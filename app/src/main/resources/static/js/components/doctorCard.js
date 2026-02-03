@@ -1,9 +1,10 @@
 // doctorCard.js
 // Creates dynamic doctor cards for Admin and Patient dashboards
 
-import { showBookingOverlay } from './loggedPatient.js';
-import { deleteDoctor } from './doctorServices.js';
-import { getPatientData } from './patientServices.js';
+import { deleteDoctor } from '../services/doctorServices.js';
+import { getPatientData } from '../services/patientServices.js';
+import { showBookingOverlay } from '../loggedPatient.js';
+
 
 export function createDoctorCard(doctor) {
   // Main card container

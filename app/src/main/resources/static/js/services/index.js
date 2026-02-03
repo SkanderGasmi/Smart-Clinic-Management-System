@@ -1,115 +1,96 @@
-// app/src/main/resources/static/js/services/index.js
-
-// Import the openModal function for showing login popups
-import { openModal } from '../components/modals.js';
-
-// Import API base URL from configuration
 import { API_BASE_URL } from '../config/config.js';
 
-// Define endpoint constants
-const ADMIN_API = API_BASE_URL + '/admin';
+const ADMIN_API = API_BASE_URL + '/admin/login';
 const DOCTOR_API = API_BASE_URL + '/doctor/login';
 
-// Run after DOM is fully loaded
-window.onload = function () {
-  // Select Admin and Doctor login buttons
-  const adminBtn = document.getElementById('adminLogin');
-  const doctorBtn = document.getElementById('doctorLogin');
-
-  if (adminBtn) {
-    adminBtn.addEventListener('click', () => {
-      openModal('adminLogin');
-    });
-  }
-
-  if (doctorBtn) {
-    doctorBtn.addEventListener('click', () => {
-      openModal('doctorLogin');
-    });
-  }
-};
-
-// Admin login handler
-window.adminLoginHandler = async function () {
+export async function adminLoginHandler(username, password) {
   try {
-    // Get input values
-    const username = document.getElementById('adminUsername').value;
-    const password = document.getElementById('adminPassword').value;
-
-    const admin = { username, password };
-
-    // Send POST request
     const response = await fetch(ADMIN_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(admin)
+      body: JSON.stringify({ username, password })
     });
 
     if (!response.ok) {
-      alert('Invalid credentials!');
-      return;
+      const err = await response.json();
+      return alert(err.message || 'Invalid credentials!');
     }
 
     const data = await response.json();
-
-    // Store token in localStorage
     localStorage.setItem('token', data.token);
-    // Set role
-    selectRole('admin');
-
-  } catch (error) {
-    console.error('Admin login error:', error);
-    alert('An error occurred during login. Please try again.');
+    localStorage.setItem('userRole', 'admin');
+    window.location.href = '/admin/dashboard';
+  } catch (err) {
+    console.error(err);
+    alert('Login failed');
   }
-};
+}
 
-// Doctor login handler
-window.doctorLoginHandler = async function () {
+export async function doctorLoginHandler(email, password) {
   try {
-    // Get input values
-    const email = document.getElementById('doctorEmail').value;
-    const password = document.getElementById('doctorPassword').value;
-
-    const doctor = { email, password };
-
-    // Send POST request
     const response = await fetch(DOCTOR_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(doctor)
+      body: JSON.stringify({ email, password })
     });
 
     if (!response.ok) {
-      alert('Invalid credentials!');
-      return;
+      const err = await response.json();
+      return alert(err.message || 'Invalid credentials!');
     }
 
     const data = await response.json();
-
-    // Store token in localStorage
     localStorage.setItem('token', data.token);
-    // Set role
-    selectRole('doctor');
-
-  } catch (error) {
-    console.error('Doctor login error:', error);
-    alert('An error occurred during login. Please try again.');
+    localStorage.setItem('userRole', 'doctor');
+    window.location.href = '/doctor/dashboard';
+  } catch (err) {
+    console.error(err);
+    alert('Login failed');
   }
-};
+}
 
-// Helper function to set role in localStorage and handle page rendering
-function selectRole(role) {
+// ---- Role selection for homepage buttons ----
+export function selectRole(role) {
   localStorage.setItem('userRole', role);
 
-  // Redirect based on role
   switch (role) {
     case 'admin':
-      window.location.href = '/pages/adminDashboard.html';
+      window.location.href = '/admin/dashboard';
       break;
     case 'doctor':
-      window.location.href = '/pages/doctorDashboard.html';
+      window.location.href = '/doctor/dashboard';
+      break;
+    case 'patient':
+      window.location.href = '/pages/patientDashboard.html';
       break;
     default:
       window.location.href = '/';
   }
 }
+
+// DOMContentLoaded for modal buttons
+window.addEventListener('DOMContentLoaded', () => {
+  const adminBtn = document.getElementById('adminLogin');
+  const doctorBtn = document.getElementById('doctorLogin');
+  const modal = document.getElementById('modal');
+  const modalBody = document.getElementById('modal-body');
+  const closeBtn = document.getElementById('closeModal');
+
+  if (adminBtn && modal && modalBody) {
+    adminBtn.addEventListener('click', () => {
+      modal.style.display = 'block';
+      import('../modals/adminLoginModal.js').then(mod => mod.renderAdminLogin(modalBody));
+    });
+  }
+
+  if (doctorBtn && modal && modalBody) {
+    doctorBtn.addEventListener('click', () => {
+      modal.style.display = 'block';
+      import('../modals/doctorLoginModal.js').then(mod => mod.renderDoctorLogin(modalBody));
+    });
+  }
+
+  if (closeBtn && modal) {
+    closeBtn.onclick = () => (modal.style.display = 'none');
+  }
+});

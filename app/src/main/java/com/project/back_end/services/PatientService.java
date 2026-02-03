@@ -52,11 +52,11 @@ public class PatientService {
             response.put("error", "Unauthorized access");
             return ResponseEntity.status(401).body(response);
         }
-        List<AppointmentDTO> appointments = appointmentRepository.findByPatientId(id)
-                .stream()
+        List<Appointment> appointments = appointmentRepository.findByPatient_Id(id);
+        List<AppointmentDTO> appointmentDTOs = appointments.stream()
                 .map(AppointmentDTO::new)
                 .collect(Collectors.toList());
-        response.put("appointments", appointments);
+        response.put("appointments", appointmentDTOs);
         return ResponseEntity.ok(response);
     }
 
@@ -64,7 +64,7 @@ public class PatientService {
     @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> filterByCondition(String condition, Long id) {
         Map<String, Object> response = new HashMap<>();
-        List<Appointment> allAppointments = appointmentRepository.findByPatientId(id);
+        List<Appointment> allAppointments = appointmentRepository.findByPatient_Id(id);
 
         List<AppointmentDTO> filtered = allAppointments.stream()
                 .filter(a -> {

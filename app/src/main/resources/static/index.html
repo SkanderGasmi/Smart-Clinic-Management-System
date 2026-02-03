@@ -8,16 +8,24 @@
     <link rel="stylesheet" href="./assets/css/index.css">
     <link rel="stylesheet" href="./assets/css/style.css">
 
-    <!-- JS Utilities -->
-    <script src="./js/util.js" defer></script>
-    <script src="./js/render.js" defer></script>
+    <!-- Utilities -->
+    <script type="module" src="./js/util.js"></script>
+    <script type="module" src="./js/render.js"></script>
 
-    <!-- Components -->
-    <script src="./js/components/header.js" defer></script>
-    <script src="./js/components/footer.js" defer></script>
+    <!-- Header & Footer -->
+    <script type="module">
+        import { renderHeader } from './js/components/header.js';
+        import { renderFooter } from './js/components/footer.js';
+
+        // Render header & footer after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeader();
+            renderFooter();
+        });
+    </script>
 </head>
 
-<body onload="renderContent()">
+<body>
     <div class="container">
         <div class="wrapper">
             <div id="header"></div>
@@ -25,9 +33,9 @@
             <main class="main-content">
                 <h2>Select Your Role</h2>
                 <div class="role-buttons">
-                    <button id="adminBtn" onclick="selectRole('Admin')">Admin</button>
-                    <button id="doctorBtn" onclick="selectRole('Doctor')">Doctor</button>
-                    <button id="patientBtn" onclick="selectRole('Patient')">Patient</button>
+                    <button id="adminBtn">Admin</button>
+                    <button id="doctorBtn">Doctor</button>
+                    <button id="patientBtn">Patient</button>
                 </div>
             </main>
 
@@ -42,7 +50,16 @@
     </div>
 
     <!-- Role Selection Service -->
-    <script type="module" src="../js/services/index.js" defer></script>
+    <script type="module" src="../js/services/index.js"></script>
+
+    <script type="module">
+        // Role buttons click handlers
+        import { selectRole } from '../js/services/index.js';
+
+        document.getElementById('adminBtn').addEventListener('click', () => selectRole('admin'));
+        document.getElementById('doctorBtn').addEventListener('click', () => selectRole('doctor'));
+        document.getElementById('patientBtn').addEventListener('click', () => selectRole('patient'));
+    </script>
 </body>
 
 </html>

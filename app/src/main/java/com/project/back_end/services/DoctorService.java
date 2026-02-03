@@ -88,7 +88,7 @@ public class DoctorService {
         if (!doctorRepository.existsById(id))
             return false;
         try {
-            appointmentRepository.deleteAllByDoctorId(id);
+            appointmentRepository.deleteAllByDoctor_Id(id);
             doctorRepository.deleteById(id);
             return true;
         } catch (Exception e) {

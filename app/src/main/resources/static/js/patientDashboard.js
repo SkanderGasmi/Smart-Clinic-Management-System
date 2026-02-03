@@ -1,26 +1,52 @@
-// app/src/main/resources/static/js/patientDashboard.js
+// patientDashboard.js
 
 // Import modules
 import { createDoctorCard } from './components/doctorCard.js';
-import { openModal } from './components/modals.js';
+import { renderPatientSignup } from './components/modals/patientSignupModal.js';
+import { renderPatientLogin } from './components/modals/patientLoginModal.js';
 import { getDoctors, filterDoctors } from './services/doctorServices.js';
 import { patientSignup, patientLogin } from './services/patientServices.js';
 
-// Load all doctors on page load
 document.addEventListener("DOMContentLoaded", () => {
+  const contentDiv = document.getElementById("content");
+  const modal = document.getElementById("modal");
+  const modalBody = document.getElementById("modal-body");
+  const closeBtn = document.getElementById("closeModal");
+
+  if (!contentDiv || !modal || !modalBody) return;
+
+  // Load all doctors
   loadDoctorCards();
-});
 
-// Open signup modal
-document.addEventListener("DOMContentLoaded", () => {
+  // Close modal button
+  if (closeBtn) closeBtn.onclick = () => (modal.style.display = 'none');
+
+  // Patient Signup
   const signupBtn = document.getElementById("patientSignup");
-  if (signupBtn) signupBtn.addEventListener("click", () => openModal("patientSignup"));
-});
+  if (signupBtn) {
+    signupBtn.addEventListener("click", () => {
+      modal.style.display = 'block';
+      renderPatientSignup(modalBody);
+    });
+  }
 
-// Open login modal
-document.addEventListener("DOMContentLoaded", () => {
+  // Patient Login
   const loginBtn = document.getElementById("patientLogin");
-  if (loginBtn) loginBtn.addEventListener("click", () => openModal("patientLogin"));
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      modal.style.display = 'block';
+      renderPatientLogin(modalBody);
+    });
+  }
+
+  // Filter listeners
+  const searchBar = document.getElementById("searchBar");
+  const filterTime = document.getElementById("filterTime");
+  const filterSpecialty = document.getElementById("filterSpecialty");
+
+  if (searchBar) searchBar.addEventListener("input", filterDoctorsOnChange);
+  if (filterTime) filterTime.addEventListener("change", filterDoctorsOnChange);
+  if (filterSpecialty) filterSpecialty.addEventListener("change", filterDoctorsOnChange);
 });
 
 // Fetch and display all doctors
@@ -31,15 +57,16 @@ async function loadDoctorCards() {
   } catch (error) {
     console.error("Failed to load doctors:", error);
     const contentDiv = document.getElementById("content");
-    contentDiv.innerHTML = "<p>Failed to load doctors. Please try again later.</p>";
+    if (contentDiv) contentDiv.innerHTML = "<p>Failed to load doctors. Please try again later.</p>";
   }
 }
 
-// Render list of doctors
+// Render doctor cards
 function renderDoctorCards(doctors) {
   const contentDiv = document.getElementById("content");
-  contentDiv.innerHTML = "";
+  if (!contentDiv) return;
 
+  contentDiv.innerHTML = "";
   if (!doctors || doctors.length === 0) {
     contentDiv.innerHTML = "<p>No doctors available.</p>";
     return;
@@ -51,28 +78,20 @@ function renderDoctorCards(doctors) {
   });
 }
 
-// Filter input listeners
-document.getElementById("searchBar").addEventListener("input", filterDoctorsOnChange);
-document.getElementById("filterTime").addEventListener("change", filterDoctorsOnChange);
-document.getElementById("filterSpecialty").addEventListener("change", filterDoctorsOnChange);
-
 // Filter doctors dynamically
 async function filterDoctorsOnChange() {
-  const searchValue = document.getElementById("searchBar").value.trim();
-  const timeValue = document.getElementById("filterTime").value;
-  const specialtyValue = document.getElementById("filterSpecialty").value;
-
-  const name = searchValue.length > 0 ? searchValue : null;
-  const time = timeValue.length > 0 ? timeValue : null;
-  const specialty = specialtyValue.length > 0 ? specialtyValue : null;
+  const name = document.getElementById("searchBar")?.value.trim() || null;
+  const time = document.getElementById("filterTime")?.value || null;
+  const specialty = document.getElementById("filterSpecialty")?.value || null;
 
   try {
     const response = await filterDoctors(name, time, specialty);
-    const doctors = response.doctors || [];
+    const doctors = response?.doctors || [];
     if (doctors.length > 0) {
       renderDoctorCards(doctors);
     } else {
-      document.getElementById("content").innerHTML = "<p>No doctors found with the given filters.</p>";
+      const contentDiv = document.getElementById("content");
+      if (contentDiv) contentDiv.innerHTML = "<p>No doctors found with the given filters.</p>";
     }
   } catch (error) {
     console.error("Failed to filter doctors:", error);
@@ -80,7 +99,7 @@ async function filterDoctorsOnChange() {
   }
 }
 
-// Handle patient signup
+// Signup handler (used in patientSignupModal.js)
 window.signupPatient = async function () {
   try {
     const name = document.getElementById("name").value;
@@ -105,7 +124,7 @@ window.signupPatient = async function () {
   }
 };
 
-// Handle patient login
+// Login handler (used in patientLoginModal.js)
 window.loginPatient = async function () {
   try {
     const email = document.getElementById("email").value;
@@ -117,7 +136,7 @@ window.loginPatient = async function () {
     if (response.ok) {
       const result = await response.json();
       localStorage.setItem("token", result.token);
-      selectRole("loggedPatient");
+      localStorage.setItem("userRole", "loggedPatient");
       window.location.href = '/pages/loggedPatientDashboard.html';
     } else {
       alert("❌ Invalid credentials!");

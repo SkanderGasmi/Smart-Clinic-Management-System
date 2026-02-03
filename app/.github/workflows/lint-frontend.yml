@@ -1,0 +1,39 @@
+name: Lint Frontend
+
+on:
+  push:
+    paths:
+      - "src/main/resources/static/assets/pages/**/*.html"
+      - "src/main/resources/static/assets/css/**/*.css"
+      - "src/main/resources/static/assets/js/**/*.js"
+  pull_request:
+    paths:
+      - "src/main/resources/static/assets/pages/**/*.html"
+      - "src/main/resources/static/assets/css/**/*.css"
+      - "src/main/resources/static/assets/js/**/*.js"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install linters
+        run: |
+          npm install -g htmlhint stylelint eslint
+
+      - name: Lint HTML files
+        run: htmlhint "src/main/resources/static/assets/pages/**/*.html" || true
+
+      - name: Lint CSS files
+        run: stylelint "src/main/resources/static/assets/css/**/*.css" || true
+
+      - name: Lint JS files
+        run: eslint "src/main/resources/static/assets/js/**/*.js" || true

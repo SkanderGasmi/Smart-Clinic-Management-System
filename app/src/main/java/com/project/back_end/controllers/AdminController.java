@@ -1,27 +1,28 @@
 package com.project.back_end.controllers;
 
-import com.project.back_end.models.Admin;
-import com.project.back_end.services.Service_;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.project.back_end.models.Admin;
+import com.project.back_end.services.Service_;
+
 @RestController
-@RequestMapping("${api.path}admin")
+@RequestMapping("${api.path}/admin")
 public class AdminController {
 
     private final Service_ service;
 
-    // Constructor injection of Service
     public AdminController(Service_ service) {
         this.service = service;
     }
 
-    // Admin login endpoint
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> adminLogin(@RequestBody Admin admin) {
-        // Delegate login validation to the service
-        return service.validateAdmin(admin);
+        return service.validateAdmin(admin); // returns {"token": "..."}
     }
 }

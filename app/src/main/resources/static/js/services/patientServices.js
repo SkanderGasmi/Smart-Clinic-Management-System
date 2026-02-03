@@ -11,28 +11,42 @@ const PATIENT_API = API_BASE_URL + '/patient';
  * @param {Object} data - Patient details (name, email, password, etc.)
  * @returns {Object} { success: boolean, message: string }
  */
+
+
 export async function patientSignup(data) {
+  console.log("signupPatient data:", data);
+  console.log("patientSignup :: sending data ->", data); // log input
+
   try {
     const response = await fetch(`${PATIENT_API}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
 
-    const result = await response.json();
+    console.log("patientSignup :: response status ->", response.status);
 
-    if (!response.ok) {
-      throw new Error(result.message);
+    let result;
+    try {
+      result = await response.json(); // parse JSON
+    } catch (jsonError) {
+      console.error("patientSignup :: failed to parse JSON", jsonError);
+      throw new Error("Invalid JSON response from server");
     }
 
-    return { success: response.ok, message: result.message };
+    console.log("patientSignup :: server result ->", result);
+
+    if (!response.ok) {
+      throw new Error(result?.message || "Signup failed");
+    }
+
+    return { success: true, message: result.message || "Signup successful" };
   } catch (error) {
     console.error("Error :: patientSignup ::", error);
-    return { success: false, message: error.message };
+    return { success: false, message: error.message || "Unknown error" };
   }
 }
+
 
 /**
  * Login patient
